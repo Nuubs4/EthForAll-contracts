@@ -4,16 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npx thirdweb@latest detect",
+    "deploy": "npx thirdweb@latest deploy",
+    "release": "npx thirdweb@latest release"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Nuubs4/EthForAll-contracts.git"
+  "devDependencies": {
+    "hardhat": "^2.10.1"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Nuubs4/EthForAll-contracts/issues"
+  "dependencies": {
+    "@thirdweb-dev/contracts": "^3"
   },
-  "homepage": "https://github.com/Nuubs4/EthForAll-contracts#readme"
+  "license": "ISC"
 }
