@@ -5,20 +5,21 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./Freelance.sol";
 
-contract AgreementContract {
+contract FreelanceContract {
     using SafeMath for uint256;
     using Counters for Counters.Counter;
 
-    Agreement[] public agreements;
+    Freelance[] public agreements;
     Counters.Counter private _agreementIds;
 
-    mapping(address => Agreement[]) public agreementMap;
+    mapping(address => Freelance[]) public agreementMap;
     mapping(address => uint256) public agreementImap;
 
     event CreateAgreement(
-        address indexed buyer,
-        address indexed seller,
+        address indexed client,
+        address indexed freelancer,
         uint256 price,
+        uint256 numOfMS,
         address agreementAddress,
         string  title,
         string  description
@@ -28,17 +29,15 @@ contract AgreementContract {
         address payable _client,
         address payable _freelancer,
         uint256 _price,
-        uint256 _statePercent,
-        uint256 _freelancerPercent,
+        uint256 _numberOfMilestones,
         string memory _title,
         string memory _description
     ) public {
-        Agreement agreement = new Agreement(
+        Freelance agreement = new Freelance(
             _client,
             _freelancer,
             _price,
-            _statePercent,
-            _freelancerPercent,
+            _numberOfMilestones,
             _title,
             _description
         );
@@ -49,13 +48,13 @@ contract AgreementContract {
         _agreementIds.increment();
         agreementMap[_client].push(agreement);
         agreementMap[_freelancer].push(agreement);
-        emit CreateAgreement(_client, _freelancer, _price, agreementAdress,_title, _description);
+        emit CreateAgreement(_client, _freelancer, _price,_numberOfMilestones,agreementAdress,_title, _description);
     }
 
     function getAgreementByParties(address _party)
         public
         view
-        returns (Agreement[] memory)
+        returns (Freelance[] memory)
     {
         return agreementMap[_party];
     }
@@ -63,7 +62,7 @@ contract AgreementContract {
     function getAgreementByIndex(uint256 _index)
         public
         view
-        returns (Agreement)
+        returns (Freelance)
     {
         return agreements[_index];
     }
@@ -71,13 +70,13 @@ contract AgreementContract {
     function getAgreementByAddress(address _addr)
         public
         view
-        returns (Agreement)
+        returns (Freelance)
     {
         uint256 idx = agreementImap[_addr];
         return agreements[idx];
     }
 
-    function getAllAgreements() public view returns (Agreement[] memory) {
+    function getAllAgreements() public view returns (Freelance[] memory) {
         return agreements;
     }
 }
