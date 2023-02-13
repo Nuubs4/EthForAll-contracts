@@ -14,7 +14,9 @@ contract Freelance{
     uint256 private milestonePayment;
     string private _title;
     string private _description;
+    string private _token;
     bool private _isCancelled;
+
     
     mapping(address => uint256) private _stakeAmount;
     mapping(address => bool) private _stakeStatus;
@@ -30,6 +32,7 @@ contract Freelance{
         uint256 salePrice;
         string title;
         string description;
+        string token;
         bool clientStake;
         bool clientCancel;
         bool freelancerCancel;
@@ -100,8 +103,7 @@ contract Freelance{
     }
 
     function revokeStake() 
-    public 
-    payable 
+    public  
     onlyClient 
     inProjectState(ProjectState.Cancelled)
     {
@@ -120,7 +122,6 @@ contract Freelance{
 
     function payByMilestone()
     public
-    payable 
     onlyClient
     inProjectState(ProjectState.Active) 
     agreementLocked(true)
@@ -128,7 +129,7 @@ contract Freelance{
     require(currentMilestone <= _numberOfMilestones, "Project has been completed");
     require(!_cancelStatus[_client] && !_cancelStatus[_freelancer], "Cannot pay freelancer as at least one requested cancel!");
     require(address(this).balance >= milestonePayment, "Already Paid the Entire Balance");
-  
+    
     (bool success, ) = (_freelancer).call{value: milestonePayment}(
         ""
     );
@@ -142,7 +143,6 @@ contract Freelance{
     
    function PayAtOnce()
         public
-        payable
         onlyClient
         inProjectState(ProjectState.Active)
         agreementLocked(true)
@@ -164,53 +164,44 @@ contract Freelance{
         emit AgreementStateChanged(_client, _freelancer, getStatus());
     }
 
-    // function cancel()
-    //     public
-    //     payable
-    //     bothClientFreelancer
-    //     inProjectState(ProjectState.Active)
-    //     agreementLocked(true)
-    // {
-    //     require(
-    //     !_cancelStatus[msg.sender]," Already issued a cancellation request.");
-    //     _cancelStatus[msg.sender] = true;
-    //     if (_cancelStatus[_client] && _cancelStatus[_freelancer]) {
-    //         require(address(this).balance >= _projectPrice - _stakeAmount[msg.sender], "Not enough  NEON.");
-    //         (bool clientRefunded, ) = (_client).call{value: _stakeAmount[_client]}(
-    //             ""
-    //         );
+    function cancel()
+        public
+        bothClientFreelancer
+        inProjectState(ProjectState.Active)
+        agreementLocked(true)
+    {
+        require(
+        !_cancelStatus[msg.sender]," Already issued a cancellation request.");
+        _cancelStatus[msg.sender] = true;
+        if (_cancelStatus[_client] && _cancelStatus[_freelancer]) {
+            require(address(this).balance >= _projectPrice - _stakeAmount[msg.sender], "Not enough  NEON.");
+            (bool clientRefunded, ) = (_client).call{value: _stakeAmount[_client]}(
+                ""
+            );
 
-    //         require(clientRefunded, "Transfer has failed");
-    //         address payable[2] memory arrays = [_client, _freelancer];
+            require(clientRefunded, "Transfer has failed");
+            address payable[2] memory arrays = [_client, _freelancer];
 
-    //         for (uint256 i = 0; i < arrays.length; i++) {
-    //             _cancelStatus[arrays[i]] = false;
-    //             _stakeStatus[arrays[i]] = false;
-    //         }
-    //         projectState = ProjectState.Cancelled;
-    //     }
+            for (uint256 i = 0; i < arrays.length; i++) {
+                _cancelStatus[arrays[i]] = false;
+                _stakeStatus[arrays[i]] = false;
+            }
+            projectState = ProjectState.Cancelled;
+        }
 
-    //     emit AgreementStateChanged(_client, _freelancer, getStatus());
-    // }
+        emit AgreementStateChanged(_client, _freelancer, getStatus());
+    }
 
-    // function revokeCancellation()
-    //     public
-    //     bothClientFreelancer
-    //     inProjectState(ProjectState.Active)
-    //     agreementLocked(true)
-    // {
-    //     require(_cancelStatus[msg.sender], "Doesn't have a cancel request to revoke");
-    //     _cancelStatus[msg.sender] = false;
-    //     emit AgreementStateChanged(_client, _freelancer, getStatus());
-    // }
-        
-    //     (bool clientRefunded, ) = (_client).call{value: _stakeAmount[_freelancer]}(
-    //         ""
-    //     );
-
-    //     (bool freelancerRefunded, ) = (_freelancer).call{value: _stakeAmount[_client]}(
-    //         ""
-    //     );
+    function revokeCancellation()
+        public
+        bothClientFreelancer
+        inProjectState(ProjectState.Active)
+        agreementLocked(true)
+    {
+        require(_cancelStatus[msg.sender], "Doesn't have a cancel request to revoke");
+        _cancelStatus[msg.sender] = false;
+        emit AgreementStateChanged(_client, _freelancer, getStatus());
+    }
 
     function getStatus() public view returns (ContractStatus memory) {
         return
@@ -220,6 +211,7 @@ contract Freelance{
                 _projectPrice,
                 _title,
                 _description,
+                _token,
                 _stakeStatus[_client],
                 _cancelStatus[_client],
                 _cancelStatus[_freelancer],
